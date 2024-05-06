@@ -33,17 +33,24 @@ void inline autoConfigWifi() {
 
 void inline setupOTAConfig() {
   ArduinoOTA.onStart([] {
-    tft.clear();
-    show_center_msg("OTA Update");
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawCentreString("OTA Update", 160, 60, 4);
+    tft.drawRoundRect(60, 160, 200, 20, 6, TFT_ORANGE);
   });
   ArduinoOTA.onProgress([](u32_t pro, u32_t total) {
-    sprintf(buf, "OTA Updating: %d / %d", pro, total);
-    show_center_msg(buf);
+    tft.setTextColor(TFT_SKYBLUE, TFT_BLACK);
+    sprintf(buf, "%d / %d", pro, total);
+    tft.drawCentreString(buf, 160, 120, 2);
+    int pros = pro * 200 / total;
+    tft.fillRoundRect(60, 160, pros, 20, 6, TFT_ORANGE);
   });
-  ArduinoOTA.onEnd([] { show_center_msg("OTA Sccess, Restarting..."); });
-  ArduinoOTA.onError([](ota_error_t err) {
-    sprintf(buf, "OTA Error [%d]!!", err);
-    show_center_msg(buf);
+  ArduinoOTA.onEnd([] {
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawCentreString("Update Succeed!!", 160, 60, 4);
+    tft.setTextColor(TFT_SKYBLUE, TFT_BLACK);
+    tft.drawCentreString("Restarting...", 160, 140, 2);
   });
   ArduinoOTA.begin();
 }
