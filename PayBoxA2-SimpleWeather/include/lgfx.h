@@ -2,17 +2,9 @@
 #define __LGFX_H__
 
 #include <LovyanGFX.hpp>
+#include <PayBox.h>
 
 #define SCR 8
-
-/* Change to your screen resolution */
-#ifdef PORTRAIT
-static const uint32_t screenWidth = 240;
-static const uint32_t screenHeight = 320;
-#else
-static const uint32_t screenWidth = 320;
-static const uint32_t screenHeight = 240;
-#endif
 
 class LGFX : public lgfx::LGFX_Device {
 
@@ -46,10 +38,10 @@ public:
       // * With the ESP-IDF version upgrade, SPI_DMA_CH_AUTO (automatic setting)
       // is recommended for the DMA channel. Specifying 1ch and 2ch is
       // deprecated.
-      cfg.pin_sclk = 19; // set SPI SCLK pin number
-      cfg.pin_mosi = 23; // Set MOSI pin number for SPI
-      cfg.pin_miso = 25; // set SPI MISO pin number (-1 = disable)
-      cfg.pin_dc = 21;   // Set SPI D/C pin number (-1 = disable)
+      cfg.pin_sclk = PAY_TFT_SCLK; // set SPI SCLK pin number
+      cfg.pin_mosi = PAY_TFT_MOSI; // Set MOSI pin number for SPI
+      cfg.pin_miso = PAY_TFT_MISO; // set SPI MISO pin number (-1 = disable)
+      cfg.pin_dc = PAY_TFT_DC;     // Set SPI D/C pin number (-1 = disable)
 
       _bus_instance.config(cfg);              // Apply the settings to the bus.
       _panel_instance.setBus(&_bus_instance); // Sets the bus to the panel.
@@ -59,25 +51,23 @@ public:
       // Get the structure for display panel settings.
       auto cfg = _panel_instance.config();
 
-      cfg.pin_cs = 22;   // Pin number to which CS is connected (-1 = disable)
-      cfg.pin_rst = 18;  // pin number where RST is connected (-1 = disable)
+      // Pin number to which CS is connected (-1 = disable)
+      cfg.pin_cs = PAY_TFT_CS;
+      // pin number where RST is connected (-1 = disable)
+      cfg.pin_rst = PAY_TFT_RST;
       cfg.pin_busy = -1; // pin number to which BUSY is connected (-1 = disable)
 
       // * The following setting values ​​are set to general default values
       // ​​for each panel, and the pin number (-1 = disable) to which BUSY
       // is connected, so please try commenting out any unknown items.
 
-      cfg.memory_width = 320;  // Maximum width supported by driver IC
-      cfg.memory_height = 240; // Maximum height supported by driver IC
-      cfg.panel_width = 320;   // actual displayable width
-      cfg.panel_height = 240;  // actual displayable height
+      cfg.memory_width = TFT_WIDTH;  // Maximum width supported by driver IC
+      cfg.memory_height = TFT_HEIGHT; // Maximum height supported by driver IC
+      cfg.panel_width = TFT_WIDTH;   // actual displayable width
+      cfg.panel_height = TFT_HEIGHT;  // actual displayable height
       cfg.offset_x = 0;        // Panel offset in X direction
       cfg.offset_y = 0;        // Panel offset in Y direction
-#ifdef PORTRAIT
-      cfg.offset_rotation = 0;
-#else
       cfg.offset_rotation = 6;
-#endif
       cfg.dummy_read_pixel = 8;
       cfg.dummy_read_bits = 1;
       cfg.readable = false;
@@ -92,9 +82,9 @@ public:
     { // Set backlight control. (delete if not necessary)
       // Get the structure for backlight configuration.
       auto cfg = _light_instance.config();
-
-      cfg.pin_bl = 15;     // pin number to which the backlight is connected
-      cfg.invert = true;  // true to invert backlight brightness
+      // pin number to which the backlight is connected
+      cfg.pin_bl = PAY_TFT_BAK;
+      cfg.invert = true;   // true to invert backlight brightness
       cfg.freq = 44100;    // backlight PWM frequency
       cfg.pwm_channel = 1; // PWM channel number to use
 

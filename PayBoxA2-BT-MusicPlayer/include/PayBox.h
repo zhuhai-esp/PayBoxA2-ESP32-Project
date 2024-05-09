@@ -34,4 +34,19 @@
 #define TFT_WIDTH 320
 #define TFT_HEIGHT 240
 
+void payLEDShow(uint32_t color) {
+  ledcWrite(1, (color & 0xff0000) >> 16);
+  ledcWrite(2, (color & 0x00ff00) >> 8);
+  ledcWrite(3, (color & 0x0000ff));
+}
+
+inline void payLEDInit() {
+  ledcSetup(1, 44100, 8);
+  ledcSetup(2, 44100, 8);
+  ledcSetup(3, 44100, 8);
+  ledcAttachPin(PAY_LED_RED, 1);
+  ledcAttachPin(PAY_LED_GREEN, 2);
+  ledcAttachPin(PAY_LED_BLUE, 3);
+}
+
 #endif
