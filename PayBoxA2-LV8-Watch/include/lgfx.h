@@ -4,8 +4,6 @@
 #include <LovyanGFX.hpp>
 #include <PayBox.h>
 
-#define SCR 8
-
 class LGFX : public lgfx::LGFX_Device {
 
   lgfx::Panel_ILI9341 _panel_instance;

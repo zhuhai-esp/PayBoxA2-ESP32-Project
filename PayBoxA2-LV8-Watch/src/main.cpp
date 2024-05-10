@@ -68,13 +68,20 @@ inline void showCurrentTime() {
   lv_img_set_angle(img_second, info.tm_sec * 6 * 10);
 }
 
+void inline startConfigTime() {
+  const int timeZone = 8 * 3600;
+  configTime(timeZone, 0, "ntp6.aliyun.com", "cn.ntp.org.cn", "ntp.ntsc.ac.cn");
+  while (time(nullptr) < 8 * 3600 * 2) {
+    delay(500);
+  }
+}
+
 void setup() {
   Serial.begin(115200);
   init_wt32_lvgl();
   ui_init();
-  show_center_msg("Please Config WiFi With ESP-Touch!");
   autoConfigWifi();
-  configTime(TZ_SEC, DST_SEC, "ntp.ntsc.ac.cn", "ntp1.aliyun.com");
+  startConfigTime();
   setupOTAConfig();
   showClientIP();
 }
