@@ -9,6 +9,7 @@
 static const char *WEEK_DAYS[] = {"日", "一", "二", "三", "四", "五", "六"};
 BluetoothA2DPSink a2dp_sink;
 long check1s = 0, check10ms = 0, check300ms = 0;
+long checkDark = 0;
 char buf[128] = {0};
 LGFX tft;
 uint8_t volume = 50;
@@ -16,8 +17,18 @@ bool isPause = false;
 OneButton buttons[] = {OneButton(PAY_KEY_ON), OneButton(PAY_KEY_ADD),
                        OneButton(PAY_KEY_MINUS), OneButton(PAY_KEY_REFRESH)};
 
-inline void show_center_msg(const char *msg) {
+void show_center_msg(const char *msg) {
   tft.drawCenterString(msg, TFT_WIDTH / 2, TFT_HEIGHT / 2, FONT16);
+}
+
+void payAudioDisable() {
+  pinMode(PAY_AUDIO_CTRL, OUTPUT);
+  digitalWrite(PAY_AUDIO_CTRL, LOW);
+}
+
+void payAudioEnable() {
+  pinMode(PAY_AUDIO_CTRL, OUTPUT);
+  digitalWrite(PAY_AUDIO_CTRL, HIGH);
 }
 
 void inline autoConfigWifi() {
@@ -49,6 +60,8 @@ void inline startConfigTime() {
 
 void inline setupOTAConfig() {
   ArduinoOTA.onStart([] {
+    a2dp_sink.pause();
+    payAudioDisable();
     tft.clear();
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawCentreString("OTA Update", 160, 60, FONT16);
@@ -83,16 +96,6 @@ void inline setVolume(uint8_t v) {
   tft.fillRoundRect(60, 140, pros, 8, 2, TFT_PINK);
 }
 
-void payAudioDisable() {
-  pinMode(PAY_AUDIO_CTRL, OUTPUT);
-  digitalWrite(PAY_AUDIO_CTRL, LOW);
-}
-
-void payAudioEnable() {
-  pinMode(PAY_AUDIO_CTRL, OUTPUT);
-  digitalWrite(PAY_AUDIO_CTRL, HIGH);
-}
-
 void payAudioInit() {
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_CLK_OUT1);
   REG_WRITE(PIN_CTRL, 0xFFFFF0);
@@ -115,25 +118,39 @@ void inline setupAudioPlay() {
 
 void inline setupButtonEvents() {
   buttons[0].attachClick([] {
+    tft.setBrightness(60);
+    checkDark = 0;
     payAudioDisable();
     ESP.restart();
   });
-  buttons[1].attachClick([] { a2dp_sink.next(); });
+  buttons[1].attachClick([] {
+    tft.setBrightness(60);
+    checkDark = 0;
+    a2dp_sink.next();
+  });
   buttons[1].attachDoubleClick([] {
     if (volume < 120) {
       setVolume(volume + 10);
     }
   });
-  buttons[2].attachClick([] { a2dp_sink.previous(); });
+  buttons[2].attachClick([] {
+    tft.setBrightness(60);
+    checkDark = 0;
+    a2dp_sink.previous();
+  });
   buttons[2].attachDoubleClick([] {
     if (volume > 10) {
       setVolume(volume - 10);
     }
   });
   buttons[3].attachClick([] {
+    tft.setBrightness(60);
+    checkDark = 0;
     if (isPause) {
       a2dp_sink.play();
+      payAudioEnable();
     } else {
+      payAudioDisable();
       a2dp_sink.pause();
     }
     isPause = !isPause;
@@ -143,6 +160,7 @@ void inline setupButtonEvents() {
 void setup() {
   Serial.begin(115200);
   tft.init();
+  tft.setBrightness(60);
   payLEDInit();
   payLEDShow(0xf6229a);
   show_center_msg("Start WiFi Connect!");
@@ -167,7 +185,7 @@ void inline showCurrentTime() {
   tft.drawCenterString(buf, 160, 8, &fonts::efontCN_24);
   strftime(buf, 32, "%T", &info);
   tft.setTextColor(TFT_DARKCYAN, TFT_BLACK);
-  tft.drawCenterString(buf, 160, 40, &fonts::FreeSerif18pt7b);
+  tft.drawCenterString(buf, 160, 46, &fonts::FreeSerif18pt7b);
 }
 
 void loop() {
@@ -177,6 +195,10 @@ void loop() {
     auto led = random(0x050505, 0xffffff);
     payLEDShow(led);
     ArduinoOTA.handle();
+    checkDark += 1;
+    if (checkDark == 30) {
+      tft.setBrightness(16);
+    }
   }
   if (ms - check300ms >= 300) {
     check300ms = ms;
