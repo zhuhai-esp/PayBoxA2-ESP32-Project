@@ -4,8 +4,6 @@
 #include <LovyanGFX.hpp>
 #include <PayBox.h>
 
-#define SCR 8
-
 class LGFX : public lgfx::LGFX_Device {
 
   lgfx::Panel_ILI9341 _panel_instance;
@@ -85,7 +83,7 @@ public:
       // pin number to which the backlight is connected
       cfg.pin_bl = PAY_TFT_BAK;
       cfg.invert = true;   // true to invert backlight brightness
-      cfg.freq = 44100;    // backlight PWM frequency
+      cfg.freq = 2000;    // backlight PWM frequency
       cfg.pwm_channel = 1; // PWM channel number to use
 
       _light_instance.config(cfg);
