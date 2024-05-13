@@ -14,11 +14,14 @@ typedef struct {
   String name;
 } RadioItem;
 
-long check1s = 0, check10ms = 0;
+static const char *WEEK_DAYS[] = {"日", "一", "二", "三", "四", "五", "六"};
+long check1s = 0, check10ms = 0, check300ms = 0;
 char buf[128] = {0};
 LGFX tft;
 LGFX_Sprite sp(&tft);
 Audio audio;
+int curIndex = 0;
+int curVolume = 5;
 std::map<u32_t, OneButton *> buttons;
 std::vector<RadioItem> radios = {
     {20500149, "两广之声音乐台"},
@@ -142,8 +145,6 @@ std::vector<RadioItem> radios = {
     {20212387, "凤凰音乐"},
     {20500187, "云梦音乐台"},
 };
-int curIndex = 0;
-int curVolume = 5;
 
 void inline autoConfigWifi() {
   tft.println("Start WiFi Connect!");
@@ -213,7 +214,7 @@ void nextVolume(int offset) {
     sprintf(buf, "音量: %d", curVolume);
     sp.createSprite(320, 16);
     sp.drawCentreString(buf, 160, 0);
-    sp.pushSprite(0, 140);
+    sp.pushSprite(0, 50);
     sp.deleteSprite();
   }
 }
@@ -232,7 +233,7 @@ void playNext(int offset) {
   sprintf(buf, "%d.%s", curIndex + 1, radio.name.c_str());
   sp.createSprite(320, 16);
   sp.drawCentreString(buf, 160, 0);
-  sp.pushSprite(0, 110);
+  sp.pushSprite(0, 20);
   sp.deleteSprite();
 }
 
@@ -240,6 +241,7 @@ void onButtonClick(void *p) {
   u32_t pin = (u32_t)p;
   switch (pin) {
   case PAY_KEY_ON:
+    playNext(10);
     break;
   case PAY_KEY_REFRESH:
     audio.pauseResume();
@@ -259,6 +261,7 @@ void onButtonDoubleClick(void *p) {
   u32_t pin = (u32_t)p;
   switch (pin) {
   case PAY_KEY_ON:
+    playNext(radios.size() / 2);
     break;
   case PAY_KEY_ADD:
     nextVolume(1);
@@ -286,7 +289,14 @@ void inline setupAudoPlayer() {
   digitalWrite(PAY_AUDIO_CTRL, HIGH);
   audio.setPinout(PAY_AUDIO_SCLK, PAY_AUDIO_LRCK, PAY_AUDIO_SDATA,
                   PAY_AUDIO_CLKIN);
-  nextVolume(0);
+}
+
+inline void showClientIP() {
+  sprintf(buf, "IP: %s", WiFi.localIP().toString().c_str());
+  sp.createSprite(160, 16);
+  sp.drawRightString(buf, 150, 0);
+  sp.pushSprite(160, 220);
+  sp.deleteSprite();
 }
 
 void setup() {
@@ -301,7 +311,28 @@ void setup() {
   setupAudoPlayer();
   setupButtons();
   sleep(2);
+  tft.clear();
+  showClientIP();
+  nextVolume(0);
   playNext(0);
+}
+
+inline void showCurrentTime() {
+  struct tm info;
+  getLocalTime(&info);
+
+  sprintf(buf, "%d年%d月%d日 星期%s", 1900 + info.tm_year, info.tm_mon + 1,
+          info.tm_mday, WEEK_DAYS[info.tm_wday]);
+  sp.createSprite(320, 16);
+  sp.drawCentreString(buf, 160, 0);
+  sp.pushSprite(0, 90);
+  sp.deleteSprite();
+
+  strftime(buf, 36, "%T", &info);
+  sp.createSprite(320, 36);
+  sp.drawCentreString(buf, 160, 0, &fonts::FreeSans24pt7b);
+  sp.pushSprite(0, 120);
+  sp.deleteSprite();
 }
 
 void loop() {
@@ -310,6 +341,10 @@ void loop() {
   if (ms - check1s > 1000) {
     check1s = ms;
     ArduinoOTA.handle();
+  }
+  if (ms - check300ms > 300) {
+    check300ms = ms;
+    showCurrentTime();
   }
   if (ms - check10ms >= 10) {
     check10ms = ms;
