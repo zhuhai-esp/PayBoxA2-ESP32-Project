@@ -2,7 +2,10 @@
 #define __LGFX_H__
 
 #include <LovyanGFX.hpp>
-#include <PayBox.h>
+#include <PayGpio.h>
+
+#define TFT_WIDTH 320
+#define TFT_HEIGHT 240
 
 class LGFX : public lgfx::LGFX_Device {
 
@@ -59,12 +62,12 @@ public:
       // ​​for each panel, and the pin number (-1 = disable) to which BUSY
       // is connected, so please try commenting out any unknown items.
 
-      cfg.memory_width = TFT_WIDTH;  // Maximum width supported by driver IC
+      cfg.memory_width = TFT_WIDTH;   // Maximum width supported by driver IC
       cfg.memory_height = TFT_HEIGHT; // Maximum height supported by driver IC
-      cfg.panel_width = TFT_WIDTH;   // actual displayable width
+      cfg.panel_width = TFT_WIDTH;    // actual displayable width
       cfg.panel_height = TFT_HEIGHT;  // actual displayable height
-      cfg.offset_x = 0;        // Panel offset in X direction
-      cfg.offset_y = 0;        // Panel offset in Y direction
+      cfg.offset_x = 0;               // Panel offset in X direction
+      cfg.offset_y = 0;               // Panel offset in Y direction
       cfg.offset_rotation = 6;
       cfg.dummy_read_pixel = 8;
       cfg.dummy_read_bits = 1;
@@ -83,7 +86,7 @@ public:
       // pin number to which the backlight is connected
       cfg.pin_bl = PAY_TFT_BAK;
       cfg.invert = true;   // true to invert backlight brightness
-      cfg.freq = 20000;    // backlight PWM frequency
+      cfg.freq = 20000;     // backlight PWM frequency
       cfg.pwm_channel = 1; // PWM channel number to use
 
       _light_instance.config(cfg);
