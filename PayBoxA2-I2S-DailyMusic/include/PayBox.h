@@ -19,6 +19,46 @@ extern std::map<u32_t, OneButton *> buttons;
 extern void onButtonClick(void *p);
 extern void onButtonDoubleClick(void *p);
 
+void inline setupPayLED() {
+  ledcSetup(1, 44100, 8);
+  ledcSetup(2, 44100, 8);
+  ledcSetup(3, 44100, 8);
+  ledcAttachPin(PAY_LED_RED, 1);
+  ledcAttachPin(PAY_LED_GREEN, 2);
+  ledcAttachPin(PAY_LED_BLUE, 3);
+}
+
+void inline ledShowH(uint32_t hi) {
+  float h = hi / 360.0f;
+  uint32_t r, g, b;
+  if (h < 1.0f / 6.0f) {
+    r = 255;
+    g = 6 * h * 255;
+    b = 0;
+  } else if (h < 1 / 2.f) {
+    r = 255 - 6 * (h - 1 / 6.f) * 255;
+    g = 255;
+    b = 0;
+  } else if (h < 2 / 3.f) {
+    r = 0;
+    g = 255;
+    b = 6 * (h - 1 / 2.f) * 255;
+  } else {
+    r = 0;
+    g = 6 * (2 / 3.f - h) * 255;
+    b = 255;
+  }
+  ledcWrite(1, r);
+  ledcWrite(2, g);
+  ledcWrite(3, b);
+}
+
+void ledShowColor(uint32_t color) {
+  ledcWrite(1, (color & 0xff0000) >> 16);
+  ledcWrite(2, (color & 0x00ff00) >> 8);
+  ledcWrite(3, (color & 0x0000ff));
+}
+
 void inline setupButtons() {
   u32_t btnPins[] = {PAY_KEY_ON, PAY_KEY_ADD, PAY_KEY_MINUS, PAY_KEY_REFRESH};
   for (auto pin : btnPins) {

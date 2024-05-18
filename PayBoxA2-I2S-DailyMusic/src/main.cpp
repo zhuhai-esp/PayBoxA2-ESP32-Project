@@ -8,7 +8,6 @@ typedef struct {
   long id;
   String name;
   String artist;
-  String url;
 } SongItem;
 
 long check1s = 0, check10ms = 0, check300ms = 0;
@@ -20,6 +19,7 @@ int curIndex = 0;
 int curVolume = 5;
 std::map<u32_t, OneButton *> buttons;
 vector<SongItem *> songs;
+uint32_t ledH = 0;
 
 void nextVolume(int offset) {
   int vol = curVolume + offset;
@@ -35,9 +35,10 @@ void nextVolume(int offset) {
 }
 
 inline void fetch_music_url(SongItem *song) {
-  const char *url = KwWork::getUrl(song->id).c_str();
+  string uu = KwWork::getUrl(song->id);
+  const char *cu = uu.c_str();
   HTTPClient http;
-  http.begin(url);
+  http.begin(cu);
   if (http.GET() > 0) {
     String txt = http.getString();
     http.end();
@@ -48,8 +49,14 @@ inline void fetch_music_url(SongItem *song) {
       lines.push_back(line);
     }
     if (lines.size() > 2) {
-      auto url = lines[2].substr(4).c_str();
-      audio.connecttohost(url);
+      string mu = lines[2];
+      size_t pos = mu.find(".mp3");
+      if (pos != std::string::npos) {
+        mu = mu.substr(4, pos);
+      } else {
+        mu = mu.substr(4);
+      }
+      audio.connecttohost(mu.c_str());
       digitalWrite(PAY_AUDIO_CTRL, HIGH);
     }
   } else {
@@ -157,6 +164,11 @@ void onButtonDoubleClick(void *p) {
   }
 }
 
+void inline ledColorFlow() {
+  ledH = (ledH + 1) % 360;
+  ledShowH(ledH);
+}
+
 void setup() {
   Serial.begin(115200);
   tft.init();
@@ -164,12 +176,13 @@ void setup() {
   tft.setColorDepth(8);
   sp.setFont(FONT16);
   sp.setColorDepth(8);
-  tft.setBrightness(30);
+  tft.setBrightness(100);
   autoConfigWifi();
   startConfigTime();
   setupOTAConfig();
   setupAudoPlayer();
   setupButtons();
+  setupPayLED();
   tft.clear();
   showClientIP();
   get_daily_music_list();
@@ -194,7 +207,10 @@ void loop() {
     for (auto it : buttons) {
       it.second->tick();
     }
+    ledColorFlow();
   }
 }
+
+void audio_info(const char *info) { Serial.println(info); }
 
 void audio_eof_stream(const char *info) { playNext(1); }
