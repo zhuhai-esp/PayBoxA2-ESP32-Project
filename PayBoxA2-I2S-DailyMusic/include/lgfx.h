@@ -86,7 +86,7 @@ public:
       // pin number to which the backlight is connected
       cfg.pin_bl = PAY_TFT_BAK;
       cfg.invert = true;   // true to invert backlight brightness
-      cfg.freq = 20000;     // backlight PWM frequency
+      cfg.freq = 200;     // backlight PWM frequency
       cfg.pwm_channel = 0; // PWM channel number to use
 
       _light_instance.config(cfg);

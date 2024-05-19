@@ -4,6 +4,10 @@
 #include <Audio.h>
 #include <HTTPClient.h>
 
+#define DEFAULT_BRIGHTNESS 100
+#define DARK_BRIGHTNESS 2
+#define POWER_SAVE_TIMEOUT 20
+
 typedef struct {
   long id;
   String name;
@@ -11,6 +15,7 @@ typedef struct {
 } SongItem;
 
 long check1s = 0, check10ms = 0, check300ms = 0;
+long checkSaveMode = 0;
 char buf[128] = {0};
 LGFX tft;
 LGFX_Sprite sp(&tft);
@@ -129,6 +134,10 @@ void playNext(int offset) {
 }
 
 void onButtonClick(void *p) {
+  if (checkSaveMode >= POWER_SAVE_TIMEOUT) {
+    tft.setBrightness(DEFAULT_BRIGHTNESS);
+  }
+  checkSaveMode = 0;
   u32_t pin = (u32_t)p;
   switch (pin) {
   case PAY_KEY_ON:
@@ -149,6 +158,10 @@ void onButtonClick(void *p) {
 }
 
 void onButtonDoubleClick(void *p) {
+  if (checkSaveMode >= POWER_SAVE_TIMEOUT) {
+    tft.setBrightness(DEFAULT_BRIGHTNESS);
+  }
+  checkSaveMode = 0;
   u32_t pin = (u32_t)p;
   switch (pin) {
   case PAY_KEY_ON:
@@ -165,7 +178,7 @@ void onButtonDoubleClick(void *p) {
 }
 
 void inline ledColorFlow() {
-  ledH = (ledH + 1) % 360;
+  ledH = (ledH + 2) % 360;
   ledShowH(ledH);
 }
 
@@ -176,7 +189,7 @@ void setup() {
   tft.setColorDepth(8);
   sp.setFont(FONT16);
   sp.setColorDepth(8);
-  tft.setBrightness(100);
+  tft.setBrightness(DEFAULT_BRIGHTNESS);
   autoConfigWifi();
   startConfigTime();
   setupOTAConfig();
@@ -190,6 +203,13 @@ void setup() {
   playNext(0);
 }
 
+void inline checkTFTDark() {
+  checkSaveMode += 1;
+  if (checkSaveMode == POWER_SAVE_TIMEOUT) {
+    tft.setBrightness(DARK_BRIGHTNESS);
+  }
+}
+
 void loop() {
   audio.loop();
   auto ms = millis();
@@ -197,17 +217,18 @@ void loop() {
     check1s = ms;
     ArduinoOTA.handle();
     showPlayProgress();
+    checkTFTDark();
   }
   if (ms - check300ms > 300) {
     check300ms = ms;
     showCurrentTime();
+    ledColorFlow();
   }
   if (ms - check10ms >= 10) {
     check10ms = ms;
     for (auto it : buttons) {
       it.second->tick();
     }
-    ledColorFlow();
   }
 }
 
